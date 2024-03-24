@@ -9,19 +9,12 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.net.ConnectivityManager;
-import android.net.Network;
 import android.net.NetworkCapabilities;
 import android.net.NetworkRequest;
 import android.net.wifi.ScanResult;
-import android.net.wifi.WifiConfiguration;
 import android.net.wifi.WifiManager;
 import android.net.wifi.WifiNetworkSpecifier;
-import android.net.wifi.WifiNetworkSuggestion;
 import android.os.Build;
-import android.os.Handler;
-import android.os.Looper;
-import android.os.Parcelable;
-import android.provider.Settings;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
@@ -36,8 +29,6 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
 import com.human.wifirepeater.models.WifiModel;
-
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -45,10 +36,9 @@ import java.util.List;
 
 public class Adapters {
     private static final int PERMISSION_REQUEST_CODE = 100;
-    private Context mContext;
-    private WifiManager mWifiManager;
-    private ListView mListView;
-    private ArrayAdapter<WifiModel> mAdapter;
+    private final Context mContext;
+    private final WifiManager mWifiManager;
+    private final ListView mListView;
 
     public Adapters(Context context, ListView listView) {
         this.mContext = context;
@@ -60,18 +50,12 @@ public class Adapters {
         filter.addAction(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION);
         mContext.registerReceiver(wifiReceiver, filter);
         // Démarrer le scan WiFi
-        /*int i = connectToWiFiWithSSID(mContext,"desk-H","00008888");
-        if(i== WifiManager.STATUS_NETWORK_SUGGESTIONS_SUCCESS)
-            Log.i("info","succes");
-        else Log.i("info","error : "+i);*/
         startWifiScan();
         connectToWifi(mContext,"desk-H","00008888");
     }
-    public static void showToast(Context context, String msg) {
-        CharSequence text = msg;
+    public void showToast(Context context, String msg) {
         int duration = Toast.LENGTH_SHORT;
-
-        Toast toast = Toast.makeText(context, text, duration);
+        Toast toast = Toast.makeText(context, msg, duration);
         toast.show();
     }
     private BroadcastReceiver wifiReceiver = new BroadcastReceiver() {
@@ -125,17 +109,18 @@ public class Adapters {
                 }
             }
             WifiList.sort(comparator);
-            this.mAdapter = new ArrayAdapter<WifiModel>(mContext,android.R.layout.simple_list_item_2,
-                    android.R.id.text1,WifiList){
+            // Affichez le SSID dans text1 et le niveau (level) dans text2
+            ArrayAdapter<WifiModel> mAdapter = new ArrayAdapter<WifiModel>(mContext, android.R.layout.simple_list_item_2,
+                    android.R.id.text1, WifiList) {
                 @SuppressLint("SetTextI18n")
                 @Override
                 public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
                     View view = super.getView(position, convertView, parent);
                     TextView text1 = view.findViewById(android.R.id.text1);
                     TextView text2 = view.findViewById(android.R.id.text2);
-                        // Affichez le SSID dans text1 et le niveau (level) dans text2
-                        text1.setText(WifiList.get(position).SSID);
-                        text2.setText("Level: "+WifiList.get(position).level);
+                    // Affichez le SSID dans text1 et le niveau (level) dans text2
+                    text1.setText(WifiList.get(position).SSID);
+                    text2.setText("Level: " + WifiList.get(position).level);
 
                     return view;
                 }
@@ -167,19 +152,4 @@ public class Adapters {
             }
         }
     }
-    private boolean HotspotEnabled() {
-        try {
-            // Récupérer la méthode 'isWifiApEnabled' via la réflexion
-            Method method = mWifiManager.getClass().getDeclaredMethod("isWifiApEnabled");
-            method.setAccessible(true);
-
-            // Appeler la méthode 'isWifiApEnabled' pour vérifier si le hotspot est activé
-            return (boolean) method.invoke(mWifiManager);
-        } catch (Exception e) {
-            e.printStackTrace();
-            return false;
-        }
-    }
-
-
 }
