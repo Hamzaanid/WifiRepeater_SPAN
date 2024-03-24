@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">WiFiRepeater</string>
+    <string name="test_intent">test intent</string>
+</resources>
