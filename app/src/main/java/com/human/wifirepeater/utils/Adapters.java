@@ -12,6 +12,7 @@ import android.net.ConnectivityManager;
 import android.net.NetworkCapabilities;
 import android.net.NetworkRequest;
 import android.net.wifi.ScanResult;
+import android.net.wifi.WifiConfiguration;
 import android.net.wifi.WifiManager;
 import android.net.wifi.WifiNetworkSpecifier;
 import android.os.Build;
@@ -29,6 +30,7 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
 import com.human.wifirepeater.models.WifiModel;
+
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -39,6 +41,7 @@ public class Adapters {
     private final Context mContext;
     private final WifiManager mWifiManager;
     private final ListView mListView;
+    private List<WifiModel> WifiList = new ArrayList<>();
 
     public Adapters(Context context, ListView listView) {
         this.mContext = context;
@@ -51,14 +54,16 @@ public class Adapters {
         mContext.registerReceiver(wifiReceiver, filter);
         // Démarrer le scan WiFi
         startWifiScan();
-        connectToWifi(mContext,"desk-H","00008888");
+        connectToWifi(mContext, "desk-H", "00008888");
     }
+
     public void showToast(Context context, String msg) {
-        int duration = Toast.LENGTH_SHORT;
+        int duration = Toast.LENGTH_LONG;
         Toast toast = Toast.makeText(context, msg, duration);
         toast.show();
     }
-    private BroadcastReceiver wifiReceiver = new BroadcastReceiver() {
+
+    private final BroadcastReceiver wifiReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
             if (intent.getAction() != null) {
@@ -89,9 +94,11 @@ public class Adapters {
             }
         }
     }
+
     public void unregisterReceiver() {
         mContext.unregisterReceiver(wifiReceiver);
     }
+
     private void updateWifiList() {
         if (ActivityCompat.checkSelfPermission(mContext, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             return;
@@ -99,12 +106,10 @@ public class Adapters {
         List<ScanResult> scanResults = mWifiManager.getScanResults();
         Comparator<WifiModel> comparator = (wifi1, wifi2) -> Integer.compare(wifi2.level, wifi1.level);
         if (scanResults != null) {
-
-            List<WifiModel> WifiList = new ArrayList<>();
             WifiModel ObjResult;
             for (ScanResult result : scanResults) {
-                if(result.BSSID != null && result.level > -80){
-                    ObjResult = new WifiModel(result.BSSID,result.SSID,result.frequency,result.level);
+                if (result.BSSID != null && result.level > -80) {
+                    ObjResult = new WifiModel(result.BSSID, result.SSID, result.frequency, result.level);
                     WifiList.add(ObjResult);
                 }
             }
@@ -125,11 +130,12 @@ public class Adapters {
                     return view;
                 }
             };
-
+            //this.mListView.removeAllViews();
             this.mListView.setAdapter(mAdapter);
 
         }
     }
+
     public void connectToWifi(Context context, String ssid, String password) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             WifiNetworkSpecifier specifier = new WifiNetworkSpecifier.Builder()
